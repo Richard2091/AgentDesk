@@ -6,3 +6,5 @@
 协议目前未冻结，JSON Schema 和契约测试列入第一阶段交付物。
 
 - [JSON Schema](schema/)：第一阶段消息信封、错误、能力报告和工具声明模式。
+
+- [windows.system.info](windows.system.info.json)：低风险系统版本查询工具的完整候选声明。
