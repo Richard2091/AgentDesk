@@ -40,9 +40,9 @@
 | 类型 | 方向 | 必需载荷与含义 |
 |---|---|---|
 | `request.execute` | 控制层 → Executor | `tool`、`contract_version`、`arguments`；可选 `timeout_ms`，省略时用工具默认值 |
-| `request.status` | 控制层 → Executor | 空对象，查询当前已认证身份拥有的请求状态或缓存终态 |
+| `request.status` | 控制层 → Executor | 必须携带 `target_request_id`，仅查询当前身份可见的单个请求状态或缓存终态 |
 | `status.response` | Executor → 控制层 | `status`、`updated_at`，可选 `result`/`error`；仅返回查询方有权查看的状态 |
-| `request.update` | Executor → 控制层 | `status`、`seq`，只报告 `awaiting_confirmation`、`executing` 或 `cancelling` 等非终态，序号单调递增 |
+| `request.update` | Executor → 控制层 | `request_id`、`status`、`seq`；状态仅可为 `awaiting_confirmation`、`executing`、`cancelling`，序号按请求单调递增 |
 | `result.final` | Executor → 控制层 | `status`、`result`、`error`、`duration_ms`；只承载终态 |
 | `progress.event` | Executor → 控制层 | `seq`、`phase`、`summary`；可选 `percent`，取值 0 至 100，表示运行进度而非成功 |
 | `request.cancel` | 控制层 → Executor | `reason`，取消信封关联请求 |
@@ -93,7 +93,7 @@
 | `awaiting_confirmation` | `executing`、`rejected`、`expired`、`cancelled` | 有效批准、拒绝/重新授权失败、挑战过期或取消 |
 | `executing` | `completed`、`failed`、`timeout`、`cancelled` | 运行结果或停止完成 |
 
-其余状态为终态，不可逆。`approved`只是确认决定，不是执行状态。批准后重新检查权限、会话与接管状态；校验失败进入 `rejected`，不执行。无效确认消息不销毁有效等待请求，返回消息错误；挑战自身到期才进入 `expired`。
+`cancelling` 只能由 `executing` 或 `awaiting_confirmation` 进入，后继必须为 `cancelled`、`completed`、`failed` 或 `timeout`；取消未完成前不得报告终态。其余状态为终态，不可逆。`approved`只是确认决定，不是执行状态。批准后重新检查权限、会话与接管状态；校验失败进入 `rejected`，不执行。无效确认消息不销毁有效等待请求，返回消息错误；挑战自身到期才进入 `expired`。
 
 `timeout_ms`从进入 `executing`开始计时；排队截止由首次执行消息的 `expires_at`限制，等待确认使用挑战有效期且不得超过该截止。确认提交本身也需未过期。三类截止不得因重试延长。挑战的最长有效期待安全评审确定。
 
@@ -120,4 +120,5 @@
 第一阶段需交付覆盖信封、全部载荷、工具声明和失败样例的 JSON Schema，并指定方言、格式验证及条件必填规则；本轮不创建接受任意载荷的空模式。Schema 文件尚未交付，当前文字契约作为实现前基线，不能据此宣称协议已冻结。
 
 签名算法、密钥引导/轮换/吊销、摘要规范化、时钟/大小限制、权限和确认凭证模式、缓存保留与崩溃恢复规则未确认，均阻断协议冻结。负责人角色和验证要求见[技术基线](../governance/technical-baseline.md)，验收场景见[验证计划](../progress/validation-plan.md)。
+
 
