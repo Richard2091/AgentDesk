@@ -12,3 +12,5 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\docs\global\contracts\vali
 
 阻断项：签名算法、密钥生命周期、摘要规范化、确认令牌、缓存保留和崩溃恢复规则尚未完成决策，协议不能标记为冻结。
 
+
+依赖安装：python -m pip install -r requirements-dev.txt；正式校验：python docs/global/contracts/validate_schemas.py。
