@@ -1,0 +1,24 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.user
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+
+# Build artifacts
+bin/
+obj/
+target/
+dist/
+build/
+
+# Obsidian local workspace
+.obsidian/
