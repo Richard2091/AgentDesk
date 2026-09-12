@@ -77,3 +77,17 @@ def test_executor_capability_over_transport():
     report = discover_executor_over_transport()
     assert report["protocol_version"] == "0.1-draft"
     assert report["tools"] == []
+from shared.config import load_shared_secret
+
+def test_missing_shared_secret_rejected(monkeypatch):
+    monkeypatch.delenv("AGENTDESK_SHARED_SECRET", raising=False)
+    try:
+        load_shared_secret()
+    except RuntimeError as exc:
+        assert "缺少" in str(exc)
+    else:
+        raise AssertionError("缺失共享密钥时应拒绝启动")
+
+def test_shared_secret_loaded(monkeypatch):
+    monkeypatch.setenv("AGENTDESK_SHARED_SECRET", "测试密钥")
+    assert load_shared_secret() == "测试密钥".encode("utf-8")
