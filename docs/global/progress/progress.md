@@ -93,3 +93,5 @@
 - 2026-09-12：检查正式 Schema 校验依赖，当前环境缺少 Python jsonschema，记录为待补依赖与待执行验证。
 
 - 2026-09-12：新增 requirements-dev.txt 与 Python Draft 2020-12 Schema 结构校验脚本，待安装依赖后执行。
+
+- 2026-09-12：安装开发依赖并通过 Draft 2020-12 Schema 结构校验。
