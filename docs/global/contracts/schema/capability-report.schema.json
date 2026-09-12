@@ -1,0 +1,7 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://agentdesk.local/schema/capability-report.json",
+  "type":"object","additionalProperties":false,
+  "required":["supported_protocol_versions","supported_messages","capability_epoch","executor_version","os_version","tools"],
+  "properties":{"supported_protocol_versions":{"type":"array","minItems":1,"items":{"type":"string"}},"supported_messages":{"type":"array","minItems":1,"items":{"type":"string"}},"capability_epoch":{"type":"string","minLength":1},"executor_version":{"type":"string","minLength":1},"os_version":{"type":"string","minLength":1},"tools":{"type":"array","items":{"$ref":"tool-declaration.schema.json"}}}
+}
