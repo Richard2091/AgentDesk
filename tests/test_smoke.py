@@ -54,3 +54,26 @@ def test_message_verifier_combines_auth_and_replay():
     signature = sign_message(message, secret)
     assert verifier.verify(message, signature, now=100)
     assert not verifier.verify(message, signature, now=100)
+import json
+import os
+import subprocess
+import sys
+from pathlib import Path
+from shared.transport import encode_message, decode_message
+
+def discover_executor_over_transport():
+    """通过标准输入输出完成一次能力查询。"""
+    root = Path(__file__).resolve().parent.parent
+    env = dict(os.environ, PYTHONPATH=str(root))
+    message = {"message_type": "capability.query"}
+    result = subprocess.run([sys.executable, str(root / "windows_executor" / "transport_main.py")], input=encode_message(message), capture_output=True, text=True, check=True, env=env)
+    return decode_message(result.stdout)
+
+def test_structured_transport_roundtrip():
+    message = {"message_type": "capability.query", "payload": {}}
+    assert decode_message(encode_message(message)) == message
+
+def test_executor_capability_over_transport():
+    report = discover_executor_over_transport()
+    assert report["protocol_version"] == "0.1-draft"
+    assert report["tools"] == []
