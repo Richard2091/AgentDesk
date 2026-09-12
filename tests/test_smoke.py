@@ -25,3 +25,22 @@ def test_expired_message_rejected():
     secret = b"local-secret"
     signature = sign_message(message, secret)
     assert not verify_message(message, signature, secret, now=200)
+from shared.replay import ReplayGuard
+
+
+def test_replay_nonce_rejected():
+    guard = ReplayGuard(ttl_seconds=30)
+    assert guard.accept("s1", "n1", now=100)
+    assert not guard.accept("s1", "n1", now=101)
+
+
+def test_replay_nonce_isolated_by_session():
+    guard = ReplayGuard(ttl_seconds=30)
+    assert guard.accept("s1", "n1", now=100)
+    assert guard.accept("s2", "n1", now=100)
+
+
+def test_expired_nonce_can_be_removed():
+    guard = ReplayGuard(ttl_seconds=30)
+    assert guard.accept("s1", "n1", now=100)
+    assert guard.accept("s1", "n1", now=131)
