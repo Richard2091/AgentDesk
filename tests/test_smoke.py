@@ -44,3 +44,13 @@ def test_expired_nonce_can_be_removed():
     guard = ReplayGuard(ttl_seconds=30)
     assert guard.accept("s1", "n1", now=100)
     assert guard.accept("s1", "n1", now=131)
+from shared.auth import sign_message
+from shared.verifier import MessageVerifier
+
+def test_message_verifier_combines_auth_and_replay():
+    message = {"session_id": "s1", "nonce": "n1", "issued_at": 100}
+    secret = b"local-secret"
+    verifier = MessageVerifier(secret)
+    signature = sign_message(message, secret)
+    assert verifier.verify(message, signature, now=100)
+    assert not verifier.verify(message, signature, now=100)
