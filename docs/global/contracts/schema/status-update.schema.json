@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://agentdesk.local/schema/status-update.json","type":"object","additionalProperties":false,"required":["request_id","status","seq"],"properties":{"request_id":{"type":"string","minLength":1},"status":{"enum":["awaiting_confirmation","executing","cancelling"]},"seq":{"type":"integer","minimum":1}}}
