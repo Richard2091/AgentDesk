@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"message-payloads","$defs":{"requestExecute":{"type":"object","required":["tool","contract_version","arguments"]},"requestCancel":{"type":"object","required":["reason"]},"resultFinal":{"type":"object","required":["status","result","error","duration_ms"]}}}
