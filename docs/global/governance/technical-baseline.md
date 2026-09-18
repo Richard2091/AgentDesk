@@ -1,6 +1,6 @@
 # 技术基线与待决策项
 
-状态：规划。AgentDesk 当前目录有 Markdown 文档，已建立控制层与 Executor 的 Python 代码骨架、基础测试、启动命令和 CI 工作流；生产依赖、密钥存储和站点构建仍待完善。控制层、Executor、MCP 和 RustDesk 业务消息集成尚未实现。
+状态：第二阶段开发期基线已完成。AgentDesk 已建立控制层与 Executor 的 Python 实现、基础测试、启动命令和 CI 工作流；生产依赖、密钥存储和站点构建仍待完善。MCP 和 RustDesk 业务消息集成尚未实现。
 
 ## 项目边界
 
@@ -32,6 +32,6 @@
 
 ## 验证状态
 
-以上决策与真实环境验证均未完成。[验证计划](../progress/validation-plan.md)保存对应验收场景，[开发进度](../progress/progress.md)记录阶段状态。协议草案可用于讨论，不能替代冻结决策。
+第二阶段已验证单控制层、单 Executor、单会话、单低风险工具的开发期本机闭环；生产密钥存储、真实 Windows 交互会话、桌面 API、MCP 和 RustDesk 仍未完成。[验证计划](../progress/validation-plan.md)保存对应验收场景，[开发进度](../progress/progress.md)记录阶段状态。未进入本阶段的规划目标不能替代已冻结契约或运行时证据。
 
 
