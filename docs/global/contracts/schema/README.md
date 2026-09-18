@@ -1,16 +1,16 @@
 # 第一阶段 Schema 验收
 
-运行：
+运行正式校验：
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\docs\global\contracts\validate-schemas.ps1
+python docs/global/contracts/validate_schemas.py
 ```
 
-通过条件：所有 Schema 可按 UTF-8 JSON 解析，且固定正例包含必填字段；固定反例缺少信封必填字段，必须被实现层拒绝。
+通过条件：所有 Draft 2020-12 Schema 结构有效；全部消息载荷正例、工具声明正例和固定反例均按约束验证。
 
-当前证据：Schema 文件已完成 JSON 解析检查；本环境未安装 Python jsonschema（导入失败），因此字段约束的运行时拒绝仍未验证。待依赖纳入项目后执行正反例校验。
+当前证据：已安装 requirements-dev.txt 中的 jsonschema 依赖；全部 9 个 Schema、13 个消息载荷正例、确认令牌条件反例、信封缺字段反例和 windows.system.info 工具声明均验证通过。
 
-阻断项：签名算法、密钥生命周期、摘要规范化、确认令牌、缓存保留和崩溃恢复规则尚未完成决策，协议不能标记为冻结。
+后续范围：Ed25519 运行时签名、密钥轮换/吊销、确认令牌消费和崩溃恢复属于后续运行时阶段；本阶段已冻结其接口参数和安全边界。
 
 
 依赖安装：python -m pip install -r requirements-dev.txt；正式校验：python docs/global/contracts/validate_schemas.py。
