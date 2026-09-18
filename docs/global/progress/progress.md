@@ -51,7 +51,7 @@
 - 状态：已完成
 - 本次目标：完成单 Executor、单会话、`windows.system.info` 单工具的端到端执行，并覆盖成功、参数错误、权限拒绝、超时、取消和 Executor 异常。
 - 已完成：形成[第二阶段实施方案](phase-2-implementation.md)；实现完整消息信封、本机认证会话、工具注册表、双端校验、请求调度、请求幂等、超时、取消、结果归一化和进程资源清理；控制层支持进程内和真实 Executor 子进程标准输入输出通道。
-- 验证证据：`$env:PYTHONPATH='.'; python -m pytest -q`，24 项通过；`python docs/global/contracts/validate_schemas.py`，全部冻结 Schema、固定正反例和工具声明通过；`python -m compileall -q control_layer windows_executor shared tests`，通过；真实子进程能力查询、未知载荷拒绝和控制层执行测试通过。
+- 验证证据：`$env:PYTHONPATH='.'; python -m pytest -q`，26 项通过；`python docs/global/contracts/validate_schemas.py`，全部冻结 Schema、固定正反例和工具声明通过；`python -m compileall -q control_layer windows_executor shared tests`，通过；真实子进程能力查询、未认证能力查询拒绝、未知载荷拒绝、声明资源/动作授权和控制层执行测试通过。
 - 独立复审：已复核状态载荷、终态载荷、取消响应、异步超时、关闭等待和消息载荷 Schema；无必须修复项。
 - 验收结论：通过。第二阶段只交付开发期 HMAC-SHA256 本机认证、单 Executor、单会话和 `windows.system.info`；不宣称生产 Ed25519、持久化恢复、审计、人工确认或真实桌面控制已完成。
 - 阻塞问题：暂无。
@@ -65,7 +65,7 @@
 | 2026-09-12 | 第一阶段 | 完成协议正文、Schema、校验脚本和安全参数 ADR | 固化跨组件契约 |
 | 2026-09-18 | 第零/第一阶段 | 清理阶段状态、补充可复现验证证据并统一协议版本 | 通过独立复审发现并修正文档矛盾 |
 | 2026-09-18 | 第二阶段 | 启动最小运行闭环实施并固化实施方案 | 前置阶段已通过，进入运行时开发 |
-| 2026-09-18 | 第二阶段 | 完成运行时、真实子进程传输测试、文档同步和独立复审 | 24 项测试、Schema 校验和编译检查通过，满足阶段退出条件 |
+| 2026-09-18 | 第二阶段 | 完成运行时、真实子进程传输测试、文档同步和独立复审 | 26 项测试、Schema 校验和编译检查通过，满足阶段退出条件 |
 
 ## 未验证范围
 

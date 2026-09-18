@@ -30,6 +30,13 @@ SYSTEM_INFO_DECLARATION = {
     "validation_cases": ["正常读取", "权限拒绝", "超时"],
 }
 
+PERMISSION_POLICY = {
+    "control-layer": {
+        "system.version": {"read"},
+        "internal.test": {"read"},
+    },
+}
+
 
 def _test_tools_enabled() -> bool:
     """读取是否允许暴露仅供测试的内部工具。"""
@@ -185,7 +192,7 @@ class ExecutorRuntime:
             if item is None:
                 return self._terminal_record(request_id, tool, contract_version, dict(arguments), "failed", error_for("unsupported_tool"))
             declaration, handler = item
-            if subject != "control-layer":
+            if not self._is_authorized(subject, declaration):
                 return self._terminal_record(request_id, tool, contract_version, dict(arguments), "failed", error_for("permission_denied"))
             validation = Draft202012Validator(declaration["input_schema"], format_checker=FormatChecker()).iter_errors(dict(arguments))
             first_error = next(iter(validation), None)
@@ -248,6 +255,22 @@ class ExecutorRuntime:
         """将本次提交返回的记录转换为结果，支持未入库的冲突记录。"""
         # 冲突记录只用于当前响应，不能写入请求状态表
         return self._final(record)
+
+    @staticmethod
+    def _is_authorized(subject: str, declaration: Mapping[str, Any]) -> bool:
+        """按调用主体、声明资源和动作执行最小权限判断。"""
+        # 读取工具声明中的资源与动作，并与本阶段固定白名单求交
+        permissions = declaration.get("permissions")
+        if not isinstance(permissions, Mapping):
+            return False
+        resource = permissions.get("resource")
+        actions = permissions.get("actions")
+        if not isinstance(resource, str) or not resource or not isinstance(actions, list) or not actions:
+            return False
+        if not all(isinstance(action, str) and action for action in actions):
+            return False
+        allowed_actions = PERMISSION_POLICY.get(subject, {}).get(resource, set())
+        return set(actions).issubset(allowed_actions)
 
     def shutdown(self, wait_timeout: float = 1.0) -> None:
         """请求在途任务停止，并在有限等待后释放线程池。"""

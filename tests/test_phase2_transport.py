@@ -45,6 +45,19 @@ def test_transport_rejects_unknown_execute_payload_field():
     assert response["payload"]["error"]["code"] == "invalid_request"
 
 
+def test_transport_rejects_unauthenticated_capability_query():
+    """验证裸能力查询不能绕过正式认证信封。"""
+    root = Path(__file__).resolve().parent.parent
+    environment = dict(os.environ, PYTHONPATH=str(root), AGENTDESK_SHARED_SECRET="transport-secret")
+    completed = subprocess.run(
+        [sys.executable, str(root / "windows_executor" / "transport_main.py")],
+        input=encode_message({"message_type": "capability.query", "payload": {}}), capture_output=True, text=True, encoding="utf-8", check=True, env=environment,
+    )
+    response = decode_message(completed.stdout)
+    assert response["message_type"] == "message.error"
+    assert response["payload"]["error"]["code"] == "invalid_request"
+
+
 def test_control_layer_executes_through_real_executor_subprocess():
     """验证控制层通过真实 Executor 子进程完成执行和状态查询。"""
     service = ControlLayerService(secret=b"subprocess-secret", use_subprocess=True)

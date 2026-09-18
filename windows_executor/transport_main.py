@@ -26,7 +26,7 @@ from shared.protocol import (
 from shared.replay import ReplayGuard
 from shared.schema import validate_message_payload
 from shared.transport import decode_message, encode_message
-from windows_executor.main import ExecutorRuntime, build_capability_report
+from windows_executor.main import ExecutorRuntime
 
 
 class ExecutorMessageServer:
@@ -174,12 +174,6 @@ def main() -> None:
     if not line:
         return
     message = decode_message(line)
-    if set(message) <= {"message_type", "payload"} and message.get("message_type") == MESSAGE_CAPABILITY_QUERY:
-        # 标准输入输出能力查询公开真实默认工具；执行请求仍必须使用认证信封
-        report = build_capability_report(legacy=False)
-        report.update({"protocol_version": "0.1", "executor_id": os.environ.get("AGENTDESK_EXECUTOR_ID", "executor-local")})
-        print(encode_message(report), end="", flush=True)
-        return
     server = ExecutorMessageServer(_binding_from_environment())
     try:
         # 保持同一认证会话，逐行处理能力、执行、状态和取消消息

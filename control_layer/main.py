@@ -20,7 +20,7 @@ from shared.protocol import (
     build_envelope,
     validate_envelope,
 )
-from shared.schema import validate_envelope_schema
+from shared.schema import validate_envelope_schema, validate_message_payload, validate_schema
 from shared.session import SessionRegistry
 from shared.transport import decode_message, encode_message
 from windows_executor.main import ExecutorRuntime
@@ -74,15 +74,38 @@ class ControlLayerService:
         # 进程内模式直接路由；子进程模式使用单行 JSON 通道
         if self._process is None:
             assert self.server is not None
-            return self.server.handle(request)
-        if self._process.stdin is None or self._process.stdout is None or self._process.poll() is not None:
-            raise RuntimeError("Executor 子进程不可用")
-        self._process.stdin.write(encode_message(request))
-        self._process.stdin.flush()
-        line = self._process.stdout.readline()
-        if not line:
-            raise RuntimeError("Executor 未返回消息")
-        return decode_message(line)
+            response = self.server.handle(request)
+        else:
+            if self._process.stdin is None or self._process.stdout is None or self._process.poll() is not None:
+                raise RuntimeError("Executor 子进程不可用")
+            self._process.stdin.write(encode_message(request))
+            self._process.stdin.flush()
+            line = self._process.stdout.readline()
+            if not line:
+                raise RuntimeError("Executor 未返回消息")
+            response = decode_message(line)
+        # 控制层不只验证响应签名，也验证响应载荷的冻结 Schema
+        validate_envelope(response, self.binding)
+        self._validate_response_payload(response)
+        return response
+
+    @staticmethod
+    def _validate_response_payload(response: Mapping[str, Any]) -> None:
+        """按响应消息类型校验 Executor 返回载荷。"""
+        # 根据消息类型选择唯一的冻结载荷定义
+        definitions = {
+            "status.response": "statusResponse",
+            "result.final": "resultFinal",
+            "cancel.ack": "cancelAck",
+            "message.error": "messageError",
+        }
+        message_type = response.get("message_type")
+        if message_type == "capability.report":
+            validate_schema(response["payload"], "capability-report.schema.json")
+        elif message_type in definitions:
+            validate_message_payload(response["payload"], definitions[message_type])
+        else:
+            raise RuntimeError("Executor 返回了不支持的消息类型")
 
     def capability(self) -> dict[str, Any]:
         """发送能力查询并校验执行器能力报告。"""
@@ -90,7 +113,6 @@ class ControlLayerService:
         request = build_envelope(MESSAGE_CAPABILITY_QUERY, {}, self.binding)
         validate_envelope_schema(request)
         response = self._handle(request)
-        validate_envelope(response, self.binding)
         if response["message_type"] != "capability.report":
             raise RuntimeError("能力查询未返回能力报告")
         return response["payload"]
@@ -105,7 +127,6 @@ class ControlLayerService:
             payload["timeout_ms"] = timeout_ms
         request = build_envelope(MESSAGE_REQUEST_EXECUTE, payload, self.binding, request_id=target_request_id)
         response = self._handle(request)
-        validate_envelope(response, self.binding)
         payload = response["payload"]
         if response["message_type"] == "result.final":
             if payload.get("error") and payload["error"].get("code") == "request_conflict":
@@ -135,7 +156,6 @@ class ControlLayerService:
             payload["timeout_ms"] = timeout_ms
         request = build_envelope(MESSAGE_REQUEST_EXECUTE, payload, self.binding, request_id=target_request_id)
         response = self._handle(request)
-        validate_envelope(response, self.binding)
         return response["payload"]
 
     def status(self, request_id: str) -> dict[str, Any]:
@@ -143,7 +163,6 @@ class ControlLayerService:
         # 通过 request.status 获取执行器当前可观测状态
         request = build_envelope(MESSAGE_REQUEST_STATUS, {"target_request_id": request_id}, self.binding, request_id=request_id)
         response = self._handle(request)
-        validate_envelope(response, self.binding)
         return response["payload"]
 
     def cancel(self, request_id: str, reason: str = "调用方请求取消") -> dict[str, Any]:
@@ -151,7 +170,6 @@ class ControlLayerService:
         # 使用独立消息随机数，关联原请求编号
         request = build_envelope(MESSAGE_REQUEST_CANCEL, {"reason": reason}, self.binding, request_id=request_id)
         response = self._handle(request)
-        validate_envelope(response, self.binding)
         return response["payload"]
 
     def close(self) -> None:

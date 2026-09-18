@@ -18,7 +18,7 @@ $env:PYTHONPATH = "."
 python -m pytest -q
 ```
 
-预期结果：第二阶段测试全部通过；当前基线为 23 项测试通过。
+预期结果：第二阶段测试全部通过；当前基线为 26 项测试通过。
 
 ## 启动能力发现演示
 
@@ -27,7 +27,7 @@ $env:AGENTDESK_SHARED_SECRET = "local-test-secret"
 .\verify-start.ps1
 ```
 
-脚本会启动控制层，控制层再启动 Executor，读取一份结构化能力报告并在成功时返回退出码 0。旧启动脚本保留第一阶段兼容输出；第二阶段正式能力发现和执行通过完整认证信封与 `windows_executor/transport_main.py` 传输入口验证。
+脚本会启动控制层，控制层再启动 Executor，读取一份结构化能力报告并在成功时返回退出码 0。第二阶段正式能力发现和执行通过完整认证信封与 `windows_executor/transport_main.py` 传输入口验证；未认证的裸消息不会返回能力或执行结果。
 
 也可以直接运行：
 

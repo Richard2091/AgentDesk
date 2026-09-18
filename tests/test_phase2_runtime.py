@@ -56,6 +56,19 @@ def test_permission_denied_and_unknown_fields_are_rejected():
         server.close()
 
 
+def test_declared_resource_and_action_policy_is_enforced():
+    """验证工具声明的资源和动作必须命中调用主体权限白名单。"""
+    runtime = ExecutorRuntime(enable_internal_test_tools=True)
+    try:
+        denied = runtime.execute("policy-check", "test.sleep", "0.1.0", {"duration_ms": 1}, subject="untrusted")
+        assert denied["status"] == "failed"
+        assert denied["error"]["code"] == "permission_denied"
+        allowed = runtime.execute("policy-allowed", "test.sleep", "0.1.0", {"duration_ms": 1}, subject="control-layer")
+        assert allowed["status"] == "completed"
+    finally:
+        runtime.shutdown()
+
+
 def test_replay_is_rejected_without_second_execution():
     """验证同一 message_id 和 nonce 的重放被拒绝。"""
     service = ControlLayerService(secret=b"phase2-secret")

@@ -62,15 +62,24 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+from shared.protocol import SessionBinding, build_envelope, validate_envelope
+from shared.schema import validate_schema
 from shared.transport import encode_message, decode_message
 
 def discover_executor_over_transport():
     """通过标准输入输出完成一次能力查询。"""
     root = Path(__file__).resolve().parent.parent
     env = dict(os.environ, PYTHONPATH=str(root))
-    message = {"message_type": "capability.query"}
+    binding = SessionBinding("session-smoke", "executor-local", "control-layer", "hmac-sha256", "local-dev", b"local-test-secret")
+    message = build_envelope("capability.query", {}, binding)
+    env["AGENTDESK_SHARED_SECRET"] = "local-test-secret"
+    env["AGENTDESK_SESSION_ID"] = binding.session_id
+    env["AGENTDESK_EXECUTOR_ID"] = binding.executor_id
     result = subprocess.run([sys.executable, str(root / "windows_executor" / "transport_main.py")], input=encode_message(message), capture_output=True, text=True, encoding="utf-8", check=True, env=env)
-    return decode_message(result.stdout)
+    response = decode_message(result.stdout)
+    validate_envelope(response, binding)
+    validate_schema(response["payload"], "capability-report.schema.json")
+    return response["payload"]
 
 def test_structured_transport_roundtrip():
     message = {"message_type": "capability.query", "payload": {}}
@@ -78,7 +87,7 @@ def test_structured_transport_roundtrip():
 
 def test_executor_capability_over_transport():
     report = discover_executor_over_transport()
-    assert report["protocol_version"] == "0.1"
+    assert report["supported_protocol_versions"] == ["0.1"]
     assert {tool["name"] for tool in report["tools"]} == {"windows.system.info"}
 
 

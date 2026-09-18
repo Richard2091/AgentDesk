@@ -51,10 +51,10 @@
 
 ## 实际交付与验证
 
-- 控制层已支持进程内服务和真实 Executor 子进程两种模式；子进程通过标准输入输出传递单行 UTF-8 JSON，并复用同一会话绑定和开发期 HMAC 签名。
+- 控制层已支持进程内服务和真实 Executor 子进程两种模式；子进程通过标准输入输出传递单行 UTF-8 JSON，并复用同一会话绑定和开发期 HMAC 签名。传输入口不接受未认证裸能力查询。
 - Executor 已注册 `windows.system.info`，默认能力报告只公开该低风险工具；测试用工具仅在显式测试配置下启用。
-- 已覆盖成功、参数错误、权限拒绝、未知工具、请求幂等、请求冲突、超时、取消、内部异常、重放、未知字段和真实子进程往返。
-- 验证命令：`$env:PYTHONPATH='.'; python -m pytest -q`（24 项通过）；`python docs/global/contracts/validate_schemas.py`（通过）；`python -m compileall -q control_layer windows_executor shared tests`（通过）。
+- 已覆盖成功、参数错误、权限拒绝、声明资源/动作越权、未知工具、请求幂等、请求冲突、超时、取消、内部异常、重放、未知字段、未认证能力查询拒绝和真实子进程往返。
+- 验证命令：`$env:PYTHONPATH='.'; python -m pytest -q`（26 项通过）；`python docs/global/contracts/validate_schemas.py`（通过）；`python -m compileall -q control_layer windows_executor shared tests`（通过）。
 - 阶段退出结论：通过。当前仅为开发期本机闭环；真实 Windows API、生产认证、持久化、审计和人工确认继续由后续阶段负责。
 
 只有代码、自动化测试、可复现演示、文档同步和独立复审全部通过后，才能将第二阶段标记为已完成。
