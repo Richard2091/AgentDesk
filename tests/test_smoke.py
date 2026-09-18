@@ -1,4 +1,7 @@
-from control_layer.main import discover_executor
+import time
+
+from control_layer.main import ControlLayerService, discover_executor
+from windows_executor.main import ExecutorRuntime
 
 def test_discover_executor():
     report = discover_executor()
@@ -66,7 +69,7 @@ def discover_executor_over_transport():
     root = Path(__file__).resolve().parent.parent
     env = dict(os.environ, PYTHONPATH=str(root))
     message = {"message_type": "capability.query"}
-    result = subprocess.run([sys.executable, str(root / "windows_executor" / "transport_main.py")], input=encode_message(message), capture_output=True, text=True, check=True, env=env)
+    result = subprocess.run([sys.executable, str(root / "windows_executor" / "transport_main.py")], input=encode_message(message), capture_output=True, text=True, encoding="utf-8", check=True, env=env)
     return decode_message(result.stdout)
 
 def test_structured_transport_roundtrip():
@@ -76,7 +79,68 @@ def test_structured_transport_roundtrip():
 def test_executor_capability_over_transport():
     report = discover_executor_over_transport()
     assert report["protocol_version"] == "0.1"
-    assert report["tools"] == []
+    assert {tool["name"] for tool in report["tools"]} == {"windows.system.info"}
+
+
+def test_phase2_success_and_capability():
+    service = ControlLayerService(secret=b"local-secret")
+    try:
+        capability = service.capability()
+        assert capability["tools"][0]["name"] == "windows.system.info"
+        result = service.execute("windows.system.info", {}, timeout_ms=10000)
+        assert result["status"] == "completed"
+        assert result["result"]["executor_version"] == "0.1.0"
+    finally:
+        service.close()
+
+
+def test_phase2_invalid_permission_and_idempotency():
+    runtime = ExecutorRuntime(enable_internal_test_tools=True)
+    service = ControlLayerService(secret=b"local-secret", runtime=runtime)
+    try:
+        invalid = service.execute("windows.system.info", {"unexpected": True}, request_id="req-invalid")
+        assert invalid["status"] == "failed"
+        assert invalid["error"]["code"] == "invalid_arguments"
+        unsupported = service.execute("missing.tool", {}, request_id="req-missing")
+        assert unsupported["status"] == "failed"
+        assert unsupported["error"]["code"] == "unsupported_tool"
+        first = service.execute("windows.system.info", {}, timeout_ms=10000, request_id="req-idempotent")
+        second = service.execute("windows.system.info", {}, timeout_ms=10000, request_id="req-idempotent")
+        assert first == second
+        conflict = service.execute("windows.system.info", {}, timeout_ms=4000, request_id="req-idempotent")
+        assert conflict["status"] == "failed"
+        assert conflict["error"]["code"] == "request_conflict"
+        assert service.status("req-idempotent")["status"] == "completed"
+    finally:
+        service.close()
+
+
+def test_phase2_timeout_cancel_and_internal_error():
+    runtime = ExecutorRuntime(enable_internal_test_tools=True)
+    service = ControlLayerService(secret=b"local-secret", runtime=runtime)
+    try:
+        timeout = service.execute("test.sleep", {"duration_ms": 1000}, timeout_ms=20, request_id="req-timeout")
+        assert timeout["status"] == "timeout"
+        assert timeout["error"]["code"] == "timeout"
+
+        request_id = "req-cancel"
+        request = service.submit("test.sleep", {"duration_ms": 1000}, timeout_ms=500, request_id=request_id)
+        assert request["status"] == "executing"
+        ack = service.cancel(request_id)
+        assert ack["outcome"] == "requested"
+        deadline = time.time() + 2
+        while time.time() < deadline:
+            status = service.status(request_id)
+            if status["status"] in {"cancelled", "completed"}:
+                break
+            time.sleep(0.01)
+        assert status["status"] == "cancelled"
+
+        failure = service.execute("test.fail", {}, request_id="req-failure")
+        assert failure["status"] == "failed"
+        assert failure["error"]["code"] == "internal_error"
+    finally:
+        service.close()
 from shared.config import load_shared_secret
 
 def test_missing_shared_secret_rejected(monkeypatch):
