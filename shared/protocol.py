@@ -159,6 +159,8 @@ def validate_envelope(envelope: Mapping[str, Any], binding: SessionBinding | Non
         raise ProtocolError("invalid_request", "调用身份字段不完整或包含未知字段")
     if not all(isinstance(envelope[field], str) and envelope[field] for field in ("message_id", "message_type", "session_id", "executor_id", "nonce")):
         raise ProtocolError("invalid_request", "信封标识字段必须为非空字符串")
+    if "request_id" in envelope and (not isinstance(envelope["request_id"], str) or not envelope["request_id"]):
+        raise ProtocolError("invalid_request", "request_id 必须为非空字符串")
     if len(envelope["nonce"]) < 16:
         raise ProtocolError("invalid_request", "随机数长度不足")
     if not isinstance(envelope["signature"], Mapping) or set(envelope["signature"]) != {"algorithm", "key_id", "value"}:

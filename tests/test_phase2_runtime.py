@@ -18,6 +18,7 @@ def test_capability_contains_default_system_info_and_matches_schema():
         report = service.capability()
         validate_schema(report, "capability-report.schema.json")
         assert [item["name"] for item in report["tools"]] == ["windows.system.info"]
+        assert report["capability_epoch"] == service.capability()["capability_epoch"]
     finally:
         service.close()
 
@@ -94,3 +95,7 @@ def test_envelope_time_and_unknown_field_validation():
     with pytest.raises(ProtocolError) as exc_info:
         validate_envelope(message, binding)
     assert exc_info.value.code == "invalid_request"
+    empty_request_id = build_envelope("request.status", {"target_request_id": "x"}, binding, request_id="")
+    with pytest.raises(ProtocolError) as request_id_error:
+        validate_envelope(empty_request_id, binding)
+    assert request_id_error.value.code == "invalid_request"

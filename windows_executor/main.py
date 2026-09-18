@@ -146,6 +146,7 @@ class ExecutorRuntime:
 
     def __init__(self, *, executor_id: str | None = None, enable_internal_test_tools: bool | None = None, max_workers: int = 4):
         self.executor_id = executor_id or "executor-local"
+        self.capability_epoch = uuid.uuid4().hex
         self.registry = ToolRegistry(enable_internal_test_tools=enable_internal_test_tools)
         self._requests: dict[str, RequestRecord] = {}
         self._lock = threading.RLock()
@@ -156,7 +157,7 @@ class ExecutorRuntime:
         # 返回最新能力声明，能力变更时生成新的不透明纪元
         # 仅公开正式工具，内部测试工具必须留在执行器进程内
         declarations = [declaration for declaration in self.registry.declarations() if not declaration["name"].startswith("test.")]
-        report = {"supported_protocol_versions": [PROTOCOL_VERSION], "supported_messages": ["capability.query", "capability.report", "request.execute", "request.status", "request.cancel", "result.final"], "capability_epoch": uuid.uuid4().hex, "executor_version": "0.1.0", "os_version": sys.platform, "tools": declarations}
+        report = {"supported_protocol_versions": [PROTOCOL_VERSION], "supported_messages": ["capability.query", "capability.report", "request.execute", "request.status", "request.cancel", "result.final"], "capability_epoch": self.capability_epoch, "executor_version": "0.1.0", "os_version": sys.platform, "tools": declarations}
         if in_reply_to:
             report["in_reply_to"] = in_reply_to
         return report
