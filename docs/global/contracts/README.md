@@ -7,5 +7,5 @@
 
 - [JSON Schema](schema/)：第一阶段消息信封、错误、能力报告和工具声明模式。
 
-- [windows.system.info](windows.system.info.json)：低风险系统版本查询工具的完整候选声明。
+- [windows.system.info](windows.system.info.json)：低风险系统版本查询工具的冻结声明。
 
