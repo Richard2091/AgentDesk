@@ -3,6 +3,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+from shared.config import load_shared_secret
 
 def discover_executor():
     """启动执行器并发现其能力。"""
@@ -15,6 +16,8 @@ def discover_executor():
 
 def main():
     """执行最小注册与能力发现流程。"""
+    # 校验开发期本机通道配置，缺少共享密钥时拒绝启动。
+    load_shared_secret()
     # 查询执行器能力并输出结果
     print(json.dumps(discover_executor(), ensure_ascii=False, indent=2))
 

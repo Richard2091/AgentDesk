@@ -2,7 +2,7 @@ from control_layer.main import discover_executor
 
 def test_discover_executor():
     report = discover_executor()
-    assert report["protocol_version"] == "0.1-draft"
+    assert report["protocol_version"] == "0.1"
     assert "capability.query" in report["supported_messages"]
     assert report["tools"] == []
 from shared.auth import sign_message, verify_message
@@ -75,7 +75,7 @@ def test_structured_transport_roundtrip():
 
 def test_executor_capability_over_transport():
     report = discover_executor_over_transport()
-    assert report["protocol_version"] == "0.1-draft"
+    assert report["protocol_version"] == "0.1"
     assert report["tools"] == []
 from shared.config import load_shared_secret
 
