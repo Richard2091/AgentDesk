@@ -19,6 +19,7 @@ from shared.errors import error_for
 from shared.protocol import PROTOCOL_VERSION, TERMINAL_STATUSES, format_timestamp, utc_now
 from shared.schema import validate_tool_declaration
 from windows_executor.enhanced_tools import register_enhanced_tools
+from windows_executor.advanced_tools import register_advanced_tools
 
 
 SYSTEM_INFO_DECLARATION = {
@@ -36,6 +37,10 @@ PERMISSION_POLICY = {
         "system.version": {"read"},
         "filesystem": {"read", "write"},
         "process": {"read", "execute"},
+        "git": {"read"},
+        "env": {"read"},
+        "search": {"read"},
+        "screen": {"read"},
         "internal.test": {"read"},
     },
 }
@@ -76,6 +81,8 @@ class ToolRegistry:
         self.register(SYSTEM_INFO_DECLARATION, self._system_info)
         # Register enhanced tools (file, process, exec)
         register_enhanced_tools(self)
+        # Register advanced tools (git, env, search, screenshot)
+        register_advanced_tools(self)
         if self._enable_internal:
             self.register(self._sleep_declaration(), self._test_sleep)
             self.register(self._fail_declaration(), self._test_fail)
