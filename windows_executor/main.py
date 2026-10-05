@@ -18,6 +18,7 @@ from jsonschema import Draft202012Validator, FormatChecker
 from shared.errors import error_for
 from shared.protocol import PROTOCOL_VERSION, TERMINAL_STATUSES, format_timestamp, utc_now
 from shared.schema import validate_tool_declaration
+from windows_executor.enhanced_tools import register_enhanced_tools
 
 
 SYSTEM_INFO_DECLARATION = {
@@ -33,6 +34,8 @@ SYSTEM_INFO_DECLARATION = {
 PERMISSION_POLICY = {
     "control-layer": {
         "system.version": {"read"},
+        "filesystem": {"read", "write"},
+        "process": {"read", "execute"},
         "internal.test": {"read"},
     },
 }
@@ -71,6 +74,8 @@ class ToolRegistry:
         self._tools: dict[str, tuple[dict[str, Any], Callable[[dict[str, Any], threading.Event], Any]]] = {}
         self._enable_internal = _test_tools_enabled() if enable_internal_test_tools is None else enable_internal_test_tools
         self.register(SYSTEM_INFO_DECLARATION, self._system_info)
+        # Register enhanced tools (file, process, exec)
+        register_enhanced_tools(self)
         if self._enable_internal:
             self.register(self._sleep_declaration(), self._test_sleep)
             self.register(self._fail_declaration(), self._test_fail)

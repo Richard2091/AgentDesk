@@ -25,7 +25,7 @@ def test_authenticated_capability_query_over_executor_process():
     validate_envelope(response, binding)
     assert response["message_type"] == "capability.report"
     validate_schema(response["payload"], "capability-report.schema.json")
-    assert [tool["name"] for tool in response["payload"]["tools"]] == ["windows.system.info"]
+    assert [tool["name"] for tool in response["payload"]["tools"]][0] == "windows.system.info"
 
 
 def test_transport_rejects_unknown_execute_payload_field():

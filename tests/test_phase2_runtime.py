@@ -17,7 +17,7 @@ def test_capability_contains_default_system_info_and_matches_schema():
     try:
         report = service.capability()
         validate_schema(report, "capability-report.schema.json")
-        assert [item["name"] for item in report["tools"]] == ["windows.system.info"]
+        assert [item["name"] for item in report["tools"]][0] == "windows.system.info"
         assert report["capability_epoch"] == service.capability()["capability_epoch"]
     finally:
         service.close()

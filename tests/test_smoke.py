@@ -88,7 +88,7 @@ def test_structured_transport_roundtrip():
 def test_executor_capability_over_transport():
     report = discover_executor_over_transport()
     assert report["supported_protocol_versions"] == ["0.1"]
-    assert {tool["name"] for tool in report["tools"]} == {"windows.system.info"}
+    assert "windows.system.info" in {tool["name"] for tool in report["tools"]}
 
 
 def test_phase2_success_and_capability():
