@@ -16,6 +16,8 @@ AgentDesk 计划让 AI Agent 在授权范围内连接 Windows 交互会话、查
 - 第一阶段“协议冻结”：已完成，协议版本为 `0.1`，完成度 100%。
 - 第二阶段“最小运行闭环”：已完成，完成度 100%。
 
+跨机网络调用已作为最小实现交付：Windows Executor 可监听 TCP 端口，Linux 上的 Claude Code / Codex 通过 `linux_client/agentdesk_call.py` 直接调用，不依赖 SSH。部署方式见 [QUICKSTART.md](QUICKSTART.md)。
+
 启动和测试方式见 [QUICKSTART.md](QUICKSTART.md)，阶段证据见 [开发进度](docs/global/progress/progress.md)。
 
 ## 开始阅读
